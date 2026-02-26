@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Team Builder - 187 Budget</title>
+  <style>
+   :root {
+  --bg:         #f8f9fc;
+  --card:       #ffffff;
+  --accent:     #0066b2;
+  --light-accent: #e3f2ff;
+  --text:       #1a202c;
+  --text-light: #718096;
+  --danger:     #e53e3e;
+  --success:    #38a169;
+  --warning:    #ed8936;
+  --border:     #e2e8f0;
+  --shadow-sm:  0 2px 12px rgba(0,0,0,0.06);
+  --shadow-md:  0 6px 24px rgba(0,0,0,0.09);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  margin: 0;
+  padding: 16px;
+  line-height: 1.5;
+}
+
+@media (min-width: 768px) {
+  body { padding: 32px 24px; }
+}
+
+.header {
+  max-width: 1440px;
+  margin: 0 auto 40px;
+  padding: 32px 24px;
+  background: var(--card);
+  border-radius: 20px;
+  box-shadow: var(--shadow-md);
+  text-align: center;
+}
+
+h1 {
+  margin: 0 0 20px;
+  font-size: clamp(2rem, 5.5vw, 2.8rem);
+  font-weight: 800;
+  color: var(--accent);
+  letter-spacing: -0.4px;
+}
+
+.budget-display {
+  font-size: clamp(2.8rem, 9vw, 4.2rem);
+  font-weight: 900;
+  letter-spacing: -2px;
+  margin: 16px 0 24px;
+}
+
+.budget-display .used   { color: var(--accent); }
+.budget-display .slash  { color: var(--text-light); opacity: 0.75; }
+.budget-display .remain { color: var(--success); }
+
+.progress-bar {
+  height: 16px;
+  background: #e2e8f0;
+  border-radius: 999px;
+  overflow: hidden;
+  margin: 0 auto 24px;
+  max-width: 560px;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.08);
+}
+
+.progress-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--accent), #60a5fa);
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.status {
+  font-size: 1.35rem;
+  font-weight: 700;
+  margin: 16px 0 28px;
+}
+
+.status.complete   { color: var(--success); }
+.status.incomplete { color: var(--warning); }
+
+.reset-btn {
+  background: var(--danger);
+  color: white;
+  border: none;
+  padding: 14px 40px;
+  border-radius: 12px;
+  font-size: 1.15rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.reset-btn:hover {
+  background: #c53030;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(229,62,62,0.25);
+}
+
+.container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 28px;
+  max-width: 1480px;
+  margin: 0 auto;
+}
+
+.role-card {
+  background: var(--card);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid var(--border);
+}
+
+.role-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 48px rgba(0,0,0,0.13);
+}
+
+.role-header {
+  background: var(--light-accent);
+  padding: 18px;
+  text-align: center;
+  font-size: 1.42rem;
+  font-weight: 800;
+  color: var(--accent);
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+
+.selected-player {
+  background: var(--light-accent);
+  margin: 20px 20px 16px;
+  padding: 16px 20px;
+  border-radius: 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 1.38rem;
+  font-weight: 700;
+  color: var(--accent);
+  border: 1px solid #bfdbfe;
+}
+
+.selected-player button {
+  background: none;
+  border: none;
+  color: var(--danger);
+  font-size: 1.8rem;
+  font-weight: bold;
+  cursor: pointer;
+  padding: 0 8px;
+  line-height: 1;
+}
+
+.search-box {
+  margin: 0 20px 16px;
+  padding: 14px 18px;
+  width: calc(100% - 40px);
+  border: 1px solid #bfdbfe;
+  border-radius: 12px;
+  font-size: 1.05rem;
+  background: #f8fdff;
+  transition: all 0.2s ease;
+}
+
+.search-box:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px rgba(0,102,178,0.15);
+  background: white;
+}
+
+.players-list {
+  padding: 0 16px 20px;
+  max-height: 440px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e0 #f8f9fc;
+}
+
+.players-list::-webkit-scrollbar {
+  width: 6px;
+}
+.players-list::-webkit-scrollbar-track {
+  background: #f8f9fc;
+}
+.players-list::-webkit-scrollbar-thumb {
+  background: #cbd5e0;
+  border-radius: 3px;
+}
+
+.player-row {
+  padding: 14px 16px;
+  margin: 8px 0;
+  background: #fafafa;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 16px;
+  border: 1px solid transparent;
+  font-size: 1.05rem;
+  justify-items: stretch;
+}
+
+.player-row:hover:not(.disabled):not(.banned) {
+  background: #edf2ff;
+  transform: translateX(4px);
+  border-color: #bfdbfe;
+ 
+}
+
+.player-row.selected {
+  background: var(--accent);
+  color: white;
+  font-weight: 700;
+  transform: translateX(0);
+}
+
+.player-row.banned {
+  opacity: 0.48;
+  text-decoration: line-through;
+  background: #f7f7f7;
+  cursor: default;
+}
+
+.player-row.disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+}
+
+.player-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 500;
+}
+
+.player-score {
+  font-weight: 900;
+  font-size: 1.32rem;
+  min-width: 60px;
+  text-align: right;
+  color: var(--accent);
+  flex-shrink: 0;
+  justify-self: end;
+}
+
+.ban-btn {
+  background: none;
+  justify-self: end;
+  border: none;
+  color: var(--danger);
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0 8px;
+  margin-left: auto;
+  flex-shrink: 0;
+  transition: color 0.15s;
+}
+
+.ban-btn:hover { color: #c53030; }
+
+.tooltip {
+  position: relative;
+}
+
+.tooltip .tooltiptext {
+  visibility: hidden;
+  width: 300px;
+  background: #2d3748;
+  color: #e2e8f0;
+  text-align: center;
+  border-radius: 10px;
+  padding: 12px 16px;
+  position: absolute;
+  z-index: 20;
+  bottom: 130%;
+  left: 50%;
+  transform: translateX(-50%);
+  opacity: 0;
+  transition: opacity 0.25s, transform 0.25s;
+  font-size: 0.98rem;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.28);
+  pointer-events: none;
+}
+
+.tooltip:hover .tooltiptext {
+  visibility: visible;
+  opacity: 1;
+  transform: translateX(-50%) translateY(-4px);
+}
+
+/* 無結果提示 */
+.players-list:empty::before,
+.players-list > div:only-child:not(.player-row) {
+  padding: 2rem;
+  text-align: center;
+  color: var(--text-light);
+  font-size: 1.1rem;
+}
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Team Builder</h1>
+  <div class="budget-display">
+    <span class="used" id="used">0.0</span>
+    <span class="slash"> / </span>
+    <span class="remain" id="remain">187.0</span>
+  </div>
+  <div class="progress-bar">
+    <div class="progress-fill" id="progress"></div>
+  </div>
+  <div class="status incomplete" id="status">Selected: 0 / 5 positions</div>
+  <button class="reset-btn" onclick="resetAll()">Reset All</button>
+</div>
+
+<div class="container" id="roles"></div>
+
+<script>
+// ── Full Data ──
+const data = {
+  top: [
+    {name:"버돌", score:67.5}, {name:"우태", score:67}, {name:"애디", score:65.5}, {name:"칸", score:64.6},
+    {name:"마린", score:63.1}, {name:"트할", score:61.6}, {name:"스맵", score:59.9}, {name:"냥칼", score:49.7},
+    {name:"샤코타임", score:45.5}, {name:"감블러", score:44.6}, {name:"박사장", score:33.6}, {name:"킴성태", score:30.7},
+    {name:"염보성", score:27}, {name:"짐묵", score:25.2}, {name:"용후니", score:23.5}, {name:"수주", score:19.2},
+    {name:"박재박", score:17.9}, {name:"오리", score:16.9}, {name:"오아", score:14}, {name:"디임", score:11}
+  ],
+  jug: [
+    {name:"피넛", score:66}, {name:"클리드", score:65}, {name:"저라뎃", score:60.5}, {name:"병현", score:59.5},
+    {name:"준밧드", score:59.4}, {name:"나탈리", score:59}, {name:"서도일", score:57.2}, {name:"제동빠", score:51.6},
+    {name:"이상호", score:45.4}, {name:"라파엘", score:45.3}, {name:"옥맨", score:39.4}, {name:"정윤종", score:35.8},
+    {name:"안녕수야", score:34.1}, {name:"꾸티뉴", score:32.4}, {name:"봉준", score:25.9}, {name:"엔도", score:16.3},
+    {name:"하랑e", score:15.5}, {name:"주보리", score:14.4}
+  ],
+  mid: [
+    {name:"권지인", score:56}, {name:"우진이", score:55.8}, {name:"양여명", score:55.5}, {name:"깐숙", score:45.7},
+    {name:"눈길", score:43.7}, {name:"김민교", score:43.2}, {name:"강만식", score:41}, {name:"쪼이", score:40.5},
+    {name:"도현", score:39.6}, {name:"서건우", score:39.3}, {name:"#김동하", score:38}, {name:"뀨삐", score:36},
+    {name:"이재봉", score:33.3}, {name:"듀단", score:31.8}, {name:"치크펑", score:23.3}, {name:"장지수", score:23.1},
+    {name:"앵", score:16.8}, {name:"박이언", score:13.9}
+  ],
+  bot: [
+    {name:"최기명", score:64.2}, {name:"오뀨", score:63.3}, {name:"원장", score:63.3}, {name:"바밤바", score:62.9},
+    {name:"미스틱", score:62.7}, {name:"나는상윤", score:60.7}, {name:"학살", score:56.1}, {name:"레이닝", score:46.2},
+    {name:"이경민", score:41.6}, {name:"엽동", score:38.3}, {name:"짐승녀", score:37}, {name:"한둬얼", score:35.2},
+    {name:"김레미", score:31.1}, {name:"김레인", score:27.6}, {name:"맛종욱", score:27.6}, {name:"채니", score:27.3},
+    {name:"오더", score:26.7}, {name:"임아니", score:24.7}, {name:"수피", score:21.4}, {name:"뱅보", score:20.2},
+    {name:"아이디", score:10.6}
+  ],
+  sup: [
+    {name:"아키아", score:52}, {name:"눈꽃", score:50.6}, {name:"베르", score:50.1}, {name:"성훈", score:49.3},
+    {name:"구거", score:48}, {name:"다훈갓", score:41.8}, {name:"라콩", score:38.5}, {name:"빈그레", score:28},
+    {name:"나옹이빵", score:26.2}, {name:"김야미", score:24}, {name:"애교용", score:23.3}, {name:"하이요", score:22},
+    {name:"마우낭", score:20}
+  ]
+};
+
+const roles = ["top", "jug", "mid", "bot", "sup"];
+
+// State
+let selected = {};
+let banned = { top: new Set(), jug: new Set(), mid: new Set(), bot: new Set(), sup: new Set() };
+let search = { top:"", jug:"", mid:"", bot:"", sup:"" };
+let used = 0;
+
+// ── Render ──
+function render() {
+  const container = document.getElementById("roles");
+  container.innerHTML = "";
+
+  roles.forEach(role => {
+    const card = document.createElement("div");
+    card.className = "role-card";
+    card.dataset.role = role;
+
+    card.innerHTML = `<div class="role-header">${role.toUpperCase()}</div>`;
+
+    if (selected[role]) {
+      const s = selected[role];
+      const selDiv = document.createElement("div");
+      selDiv.className = "selected-player";
+      selDiv.innerHTML = `
+        <span>${s.name}</span>
+        <span class="player-score">${s.score}</span>
+        <button onclick="unselect('${role}')">×</button>
+      `;
+      card.appendChild(selDiv);
+    }
+
+    let input = card.querySelector('.search-box');
+    if (!input) {
+      input = document.createElement("input");
+      input.type = "text";
+      input.className = "search-box";
+      input.placeholder = `Search ${role}...`;
+      input.value = search[role];
+      input.addEventListener("input", e => {
+        search[role] = e.target.value;
+        renderPlayersOnly(role);
+      });
+      card.appendChild(input);
+    } else {
+      input.value = search[role]; 
+    }
+
+    const playersDiv = document.createElement("div");
+    playersDiv.className = "players-list";
+    card.appendChild(playersDiv);
+
+    container.appendChild(card);
+  });
+
+  renderPlayersOnly(); 
+}
+
+function renderPlayersOnly(specificRole = null) {
+  const rolesToUpdate = specificRole ? [specificRole] : roles;
+
+  rolesToUpdate.forEach(role => {
+    const card = document.querySelector(`.role-card[data-role="${role}"]`);
+    if (!card) return;
+
+    const playersDiv = card.querySelector(".players-list");
+    if (!playersDiv) return;
+    playersDiv.innerHTML = "";
+
+    const budget = 187 - used;
+    const query = search[role].toLowerCase();
+
+    data[role]
+      .filter(p => p.name.toLowerCase().includes(query))
+      .sort((a,b) => b.score - a.score)
+      .forEach(p => {
+        const isBanned = banned[role].has(p.name);
+        const isSelected = selected[role]?.name === p.name;
+        const canSelect = !isSelected && !isBanned && p.score <= budget + 0.01;
+
+        const row = document.createElement("div");
+        row.className = "player-row";
+        if (isSelected) row.classList.add("selected");
+        if (isBanned) row.classList.add("banned");
+        if (!canSelect && !isBanned) row.classList.add("disabled");
+
+        let estimateText = "";
+        if (!isSelected && !isBanned && canSelect) {
+          estimateText = getGreedyEstimate(role, p.score);
+        }
+
+        const nameSpan = document.createElement("span");
+        nameSpan.className = "player-name";
+        nameSpan.textContent = p.name;
+
+        const scoreSpan = document.createElement("span");
+        scoreSpan.className = "player-score";
+        scoreSpan.textContent = p.score;
+
+        const banBtn = document.createElement("button");
+        banBtn.className = "ban-btn";
+        banBtn.textContent = isBanned ? "Unban" : "Ban";
+        banBtn.onclick = e => {
+          e.stopPropagation();
+          toggleBan(role, p.name);
+        };
+
+        const contentDiv = document.createElement("div");
+        contentDiv.style.display = "contents";
+        contentDiv.append(nameSpan, scoreSpan, banBtn);
+
+        if (estimateText) {
+          const tooltip = document.createElement("div");
+          tooltip.className = "tooltip";
+
+          const innerSpan = document.createElement("span");
+          innerSpan.appendChild(contentDiv);
+
+          const tooltipText = document.createElement("span");
+          tooltipText.className = "tooltiptext";
+          tooltipText.textContent = estimateText;
+
+          tooltip.appendChild(innerSpan);
+          tooltip.appendChild(tooltipText);
+          row.appendChild(tooltip);
+        } else {
+          row.appendChild(contentDiv);
+        }
+
+        if (canSelect) {
+          row.onclick = e => {
+            if (e.target.tagName !== "BUTTON") {
+              select(role, p);
+            }
+          };
+        }
+
+        playersDiv.appendChild(row);
+      });
+
+    if (playersDiv.children.length === 0) {
+      const empty = document.createElement("div");
+      empty.style.padding = "20px";
+      empty.style.textAlign = "center";
+      empty.style.color = "var(--text-light)";
+      empty.style.fontSize = "1.1rem";
+      empty.textContent = "No matching players";
+      playersDiv.appendChild(empty);
+    }
+  });
+
+  document.getElementById("used").textContent = used.toFixed(1);
+  document.getElementById("remain").textContent = (187 - used).toFixed(1);
+
+  const percent = Math.min((used / 187) * 100, 100);
+  document.getElementById("progress").style.width = percent + "%";
+
+  if (percent > 90) {
+    document.getElementById("progress").style.background = "linear-gradient(90deg, #E63946, #ff6b6b)";
+  } else if (percent > 70) {
+    document.getElementById("progress").style.background = "linear-gradient(90deg, #F57C00, #ffb74d)";
+  } else {
+    document.getElementById("progress").style.background = "linear-gradient(90deg, #0077C0, #4fc3f7)";
+  }
+
+  const count = Object.keys(selected).length;
+  const statusEl = document.getElementById("status");
+  statusEl.textContent = `Selected: ${count} / 5 positions${count === 5 ? " (Complete)" : ""}`;
+  statusEl.className = count === 5 ? "status complete" : "status incomplete";
+}
+
+// ── Greedy Estimate ──
+function getGreedyEstimate(currentRole, candidateScore) {
+  const simBudget = 187 - used - candidateScore;
+  if (simBudget < 0) return "";
+
+  let sum = 0;
+  roles.forEach(r => {
+    if (r === currentRole || selected[r]) return;
+    const avail = data[r]
+      .filter(p => !banned[r].has(p.name))
+      .filter(p => p.score <= simBudget - sum + 0.01)
+      .sort((a,b)=>b.score - a.score);
+    if (avail.length > 0) sum += avail[0].score;
+  });
+  return `If select this player, estimated remaining can add ≈ ${sum.toFixed(1)} points`;
+}
+
+// ── Actions ──
+function select(role, player) {
+  if (selected[role]) return;
+  const would = used + player.score;
+  if (would > 187 + 0.01) {
+    alert("Total would exceed 187!");
+    return;
+  }
+  selected[role] = player;
+  used += player.score;
+  renderPlayersOnly();
+}
+
+function unselect(role) {
+  if (!selected[role]) return;
+  used -= selected[role].score;
+  delete selected[role];
+  renderPlayersOnly();
+}
+
+function toggleBan(role, name) {
+  if (banned[role].has(name)) {
+    banned[role].delete(name);
+  } else {
+    banned[role].add(name);
+    if (selected[role]?.name === name) unselect(role);
+  }
+  renderPlayersOnly();
+}
+
+function resetAll() {
+  selected = {};
+  used = 0;
+  search = { top:"", jug:"", mid:"", bot:"", sup:"" };
+  banned = { top: new Set(), jug: new Set(), mid: new Set(), bot: new Set(), sup: new Set() };
+
+  roles.forEach(role => {
+    const input = document.querySelector(`.role-card[data-role="${role}"] .search-box`);
+    if (input) input.value = "";
+  });
+
+  renderPlayersOnly();
+}
+
+// ── Initial ──
+render();
+</script>
+</body>
+</html>
